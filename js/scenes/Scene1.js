@@ -1,3 +1,5 @@
+var initiallife = 3;
+var highscoretext;
 class Scene1 extends Phaser.Scene {
   constructor() {
     super("bootGame");
@@ -6,12 +8,13 @@ class Scene1 extends Phaser.Scene {
     // map made with Tiled in JSON format
     this.load.image('logo', 'assets/images/logo.png');
     this.load.image('play', 'assets/images/play.png');
-    this.load.image('bg', 'assets/images/bg.jpg');
+    this.load.image('bg', 'assets/images/bg_grasslands.png');
   }
   create() {
-    this.add.image(700, 400, 'bg');
-    this.add.image(700, 150, 'logo');
-    const helloButton = this.add.image(700, 400, 'play');
+    
+    this.add.image(config.width/2, config.height/2, 'bg');
+    this.add.image(config.width/2, 100, 'logo');
+    const helloButton = this.add.image(config.width/2, 300, 'play').setScale(0.8);
     helloButton.setInteractive();
     helloButton.on('pointerdown', () => { 
       this.scene.start("playGame");
