@@ -1,41 +1,26 @@
-var highscore = 0;
-var highscoretext;
-var map;
-var world;
-var setVelocityX;
-var enemy1;
-var player;
-var spikeLayer, plantsLayer, signLayer;
-var explodeSound;
-var coinSound;
-var soundSample, jumpSound, enemySound;
-var cursors;
-var groundLayer, coinLayer, enemyLayer,boxleftLayer, boxrightLayer;
-var text;
-var text2;
-var Scoretext, Worldtext, leveltext ,Worldtext2;
-var score = 0;
-var timetext, time2text, life2text, lifetext;
-var timedEvent, enemytimedEvent, enemytimedEvent2;
-class Scene2 extends Phaser.Scene{
+var enemy2, enemy3;
+var boxleftLayer2, boxrightLayer2;
+var starLayer;
+class Scene4 extends Phaser.Scene{
   constructor(){
-    super("playGame");
+    super("playGame2");
     // this function will be called when the player touches a coin
   }
   preload() {
       // map made with Tiled in JSON format
-      this.load.tilemapTiledJSON('map', 'assets/map/map.json');
+      this.load.tilemapTiledJSON('map2', 'assets/map/map2.json');
       // tiles in spritesheet 
       this.load.spritesheet('tiles', 'assets/images/tiles.png', {frameWidth: 50, frameHeight: 50});
       // simple coin image
       this.load.image('coin', 'assets/images/coinGold.png');
       this.load.image('bomb', 'assets/images/bomb.png');
       this.load.image('spikes', 'assets/images/spikes.png');
-      this.load.image('plants', 'assets/images/plants.png');
+      this.load.image('cactus', 'assets/images/cactus.png');
       this.load.image('signRight', 'assets/images/signRight.png');
-      this.load.image('bg_grasslands', 'assets/images/bg_grasslands.png');
+      this.load.image('bg_desert', 'assets/images/bg_desert.png');
       this.load.image('mad', 'assets/images/mad.png');
       this.load.image('box', 'assets/images/box.png');
+      this.load.image('star', 'assets/images/star.png');
       this.load.image('player1', 'assets/images/player.png');
       this.load.image('small_player', 'assets/images/small_player.png');
       // player animations
@@ -47,14 +32,19 @@ class Scene2 extends Phaser.Scene{
       this.load.audio('enemysound', 'assets/sounds/enemy.wav');
   }
   create() {
+    
+    map_counter= 2;
+    world = 2;
     // load the map 
     
-    map_counter =1;
-    world = 1;
-    var bg_grass = this.add.image(config.width/2, config.height/2, 'bg_grasslands');
+    var bg_grass = this.add.image(config.width/2, config.height/2, 'bg_desert');
     
-    enemy1 = this.physics.add.image(2020, 420, 'mad');
-    enemy1.body.setVelocityX(-100);
+    enemy2 = this.physics.add.image(560, 1280, 'mad');
+    enemy2.body.setVelocityX(-100);
+
+    enemy3 = this.physics.add.image(4200, 1130, 'mad');
+    enemy3.body.setVelocityX(-100);
+
     jumpSound = this.sound.add('jump',{
       volume: 1,
     });
@@ -68,7 +58,7 @@ class Scene2 extends Phaser.Scene{
       loop: true
     });
     soundSample.play();
-    map = this.make.tilemap({key: 'map'});
+    map = this.make.tilemap({key: 'map2'});
     
     // tiles for the ground layer
     var groundTiles = map.addTilesetImage('tiles');
@@ -87,15 +77,28 @@ class Scene2 extends Phaser.Scene{
     // the player will collide with this layer
     boxrightLayer.setCollisionByExclusion([-1]);
     // coin image used as tileset
+
+    boxleftLayer2 = map.createDynamicLayer('ColliderL1', 0, 0);
+    // the player will collide with this layer
+    boxleftLayer2.setCollisionByExclusion([-1]);
+
+    boxrightLayer2 = map.createDynamicLayer('ColliderR1', 0, 0);
+    // the player will collide with this layer
+    boxrightLayer2.setCollisionByExclusion([-1]);
     var coinTiles = map.addTilesetImage('coin');
     // add coins as tiles
     coinLayer = map.createDynamicLayer('Coins', coinTiles, 0, 0);
+
+
+    var starTiles = map.addTilesetImage('star');
+    // add coins as tiles
+    starLayer = map.createDynamicLayer('Life', starTiles, 0, 0);
 
     var signTiles = map.addTilesetImage('signRight');
     // add coins as tiles
     signLayer = map.createDynamicLayer('Finish', signTiles, 0, 0);
 
-    var plantsTiles = map.addTilesetImage('plants');
+    var plantsTiles = map.addTilesetImage('cactus');
     // add coins as tiles
     plantsLayer = map.createDynamicLayer('Plants', plantsTiles, 0, 0);
 
@@ -112,7 +115,7 @@ class Scene2 extends Phaser.Scene{
     this.physics.world.bounds.height = groundLayer.height;
 
     // create the player sprite    
-    player = this.physics.add.sprite(200, 100, 'player');
+    player = this.physics.add.sprite(140, 940, 'player');
     player.setBounce(0.2); // our player will bounce from items
     player.setCollideWorldBounds(true); // don't go out of the map    
     
@@ -121,29 +124,35 @@ class Scene2 extends Phaser.Scene{
     
     // player will collide with the level tiles 
     this.physics.add.collider(groundLayer, player);
-    this.physics.add.collider(groundLayer, enemy1);
+    this.physics.add.collider(groundLayer, enemy2);
+    this.physics.add.collider(groundLayer, enemy3);
     //this.physics.add.collider(boxleftLayer, player);
     //this.physics.add.collider(boxrightLayer, player);
-    this.physics.add.collider(player, enemy1, touchenemy1, null, this);
-    
+    this.physics.add.collider(player, enemy2, touchenemy2, null, this);
+    this.physics.add.collider(player, enemy3, touchenemy2, null, this);
     // when the player overlaps with a tile with index 17, collectCoin 
     // will be called    
     spikeLayer.setTileIndexCallback(3, touchSpikes, this);
     coinLayer.setTileIndexCallback(1, collectCoin, this);
     enemyLayer.setTileIndexCallback(2, touchBomb, this);
     signLayer.setTileIndexCallback(160, touchSign, this);
+    starLayer.setTileIndexCallback(167, touchStar, this);
     boxleftLayer.setTileIndexCallback(163, boxlefttouch, this);
     boxrightLayer.setTileIndexCallback(163, boxrighttouch, this);
-
+    boxleftLayer2.setTileIndexCallback(163, boxlefttouch, this);
+    boxrightLayer2.setTileIndexCallback(163, boxrighttouch, this);
     
     // when the player overlaps with a tile with index 17, collectCoin 
     // will be called    
-    this.physics.add.overlap(enemy1, boxleftLayer);
-    this.physics.add.overlap(enemy1, boxrightLayer);
+    this.physics.add.overlap(enemy2, boxleftLayer);
+    this.physics.add.overlap(enemy2, boxrightLayer);
+    this.physics.add.overlap(enemy3, boxleftLayer2);
+    this.physics.add.overlap(enemy3, boxrightLayer2);
     this.physics.add.overlap(player, enemyLayer);
     this.physics.add.overlap(player, coinLayer);
     this.physics.add.overlap(spikeLayer, player);
     this.physics.add.overlap(signLayer, player);
+    this.physics.add.overlap(player, starLayer);
     
     // player walk animation
     this.anims.create({
@@ -173,7 +182,7 @@ class Scene2 extends Phaser.Scene{
       fontSize: '40px',
       fill: '#ffffff'
    });
-   leveltext = this.add.text(560, 65, '1', {
+   leveltext = this.add.text(560, 65, '2', {
     fontSize: '40px',
     fill: '#ffffff'
  });
@@ -186,9 +195,9 @@ class Scene2 extends Phaser.Scene{
     text = this.add.text(700, 65, score, {
         fontSize: '40px',
         fill: '#ffffff'
+    
+    
     });
-
-  
     this.initialTime = 120;
     this.enemyTime = 4
     this.enemyTime2 = 4
@@ -213,12 +222,11 @@ class Scene2 extends Phaser.Scene{
       fill: '#ff0000'
     });
     
-    
+   
     // Each 1000 ms call onEvent
     timedEvent = this.time.addEvent({ delay: 1000, callback: onEvent, callbackScope: this, loop: true });
 
     // fix the text to the camera
-   
     lifetext.setScrollFactor(0);
     life2text.setScrollFactor(0);
     time2text.setScrollFactor(0);
@@ -231,7 +239,7 @@ class Scene2 extends Phaser.Scene{
   
   }
   update(time, delta) {
-   
+
     
     if (cursors.left.isDown)
     {
@@ -257,107 +265,23 @@ class Scene2 extends Phaser.Scene{
   }
 
 }
-function collectCoin(sprite, tile) {
-  coinSound.play();
-  coinLayer.removeTileAt(tile.x, tile.y); // remove the tile/coin
-  score+=100; 
-  
-  // add 10 points to the score
-  text.setText(score);
-  // set the text to show the current score
-  return false;
-}
-function touchBomb(sprite, tile) {
-  initiallife -= 1;
-  explodeSound.play();
-  soundSample.stop();
-  enemyLayer.removeTileAt(tile.x, tile.y);
-  life2text.setText(initiallife);
-  this.scene.start("deathGame");
- // if(initiallife === 0){
- // explodeSound.play();
-  //soundSample.stop();
-  //this.scene.start("deathGame");
-  //return false;
- // }
-}
-function touchSpikes (sprite, tile)
-{
-  console.log('hitted');
-  initiallife -= 1;
-  explodeSound.play();
-  player.destroy();
-    soundSample.stop();
-    life2text.setText(initiallife);
-    this.scene.start("deathGame");
-  }
-
-function formatTime(seconds){
-  // Minutes
-  var minutes = Math.floor(seconds/60);
-  // Seconds
-  var partInSeconds = seconds%60;
-  // Adds left zeros to seconds
-  partInSeconds = partInSeconds.toString().padStart(2,'0');
-  // Returns formated time
-  return `${minutes}:${partInSeconds}`;
-}
-
-
-function onEvent ()
-{
-   // One second
-   
-   this.initialTime -= 1;
-  timetext.setText(formatTime(this.initialTime));
-  if (this.initialTime === 0){
-    initiallife -= 1;
-    soundSample.stop();
-    this.scene.start("deathGame");
-  }
-}
-
-function touchSign(sprite) {
-  world += 1;
-  map_counter += 1;
-    soundSample.stop();
-    this.scene.start("deathGame");
-}
-function touchSign2(sprite) {
-    this.scene.start("finalGame");
-}
-
-
-function boxlefttouch(enemy1, enemy2) {
-  enemy1.body.setVelocityX(+100);
-  enemy1.flipX = true;
-  return false;
-  }
-
-  function boxrighttouch(enemy1, enemy2) {
-  enemy1.body.setVelocityX(-100);
-  enemy1.flipX = false;
-  return false;
-  }
-
-  function boxlefttouch4(enemy4) {
-    enemy4.body.setVelocityX(+150);
-    enemy4.flipX= true;
+function touchStar(sprite, tile) {
+    coinSound.play();
+    starLayer.removeTileAt(tile.x, tile.y); // remove the tile/coin
+    initiallife+=1; 
+    life2text.setText('x'+initiallife);
+    // add 10 points to the score
+    text.setText(score); // set the text to show the current score
     return false;
-    }
-  
-    function boxrighttouch4(enemy4) {
-    enemy4.body.setVelocityX(-150);
-    enemy4.flipX = false;
-    return false;
-    }
+  }
 
-  function touchenemy1(player, enemy1) {
-    if (enemy1.body.touching.up){
+  function touchenemy2(player, enemy2) {
+    if (enemy2.body.touching.up){
       enemySound.play();
-      enemy1.destroy();
+      enemy2.destroy();
       score+=150; 
       text.setText(score);
+      player.body.setVelocityY(-200);
     }else{
     initiallife -= 1;
     player.destroy();
@@ -366,6 +290,3 @@ function boxlefttouch(enemy1, enemy2) {
     this.scene.start("deathGame");
     }
     }
-   
-
-    
